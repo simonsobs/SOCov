@@ -1,5 +1,5 @@
 import numpy as np
-def CMB_Phi_Cov(labelXY,labelWZ,labelList,specPP,covPP):
+def CMB_Phi_Cov(labelXY,labelWZ,labelXW,labelYZ,labelList,specPP,covPP,fsky):
     ''' using equation 5 from https://arxiv.org/pdf/2111.15036.pdf
     This computes the covariance including off-diagonal terms induced from
     lensing-CMB correlations.
@@ -10,15 +10,26 @@ def CMB_Phi_Cov(labelXY,labelWZ,labelList,specPP,covPP):
 
     # Current issue: how to check if lensed/unlensed spectra are different lengths
     ell_u,ell_l,specXY_u,specWZ_u,specXY_l,specWZ_l=get_CMB(labelXY,labelWZ,labelList)
+    ell_u,ell_l,specYW_u,specYZ_u,specXW_l,specYZ_l=get_CMB(labelXW,labelYZ,labelList)
     
     # Getting the noise spectra
     noiseXYorig,noiseWZorig = get_noise(labelXY,labelWZ,labelList)
+    noiseXWorig,noiseYZorig = get_noise(labelXW,labelYZ,labelList)
 
     # making the noise spectra as long as the lensed spectra
     noiseXY = 0*np.ones(len(ell_u))
     noiseWZ =0*np.ones(len(ell_u))
     noiseXY[0:len(noiseXYorig)] = noiseXYorig
     noiseWZ[0:len(noiseWZorig)] = noiseWZorig
+
+    noiseXY = DltoCl(ell_u,noiseXY)
+    noiseWZ = DltoCl(ell_u,noiseWZ)
+    
+    noiseXW = 0*np.ones(len(ell_u))
+    noiseYZ =0*np.ones(len(ell_u))
+    noiseXW[0:len(noiseXWorig)] = noiseXWorig
+    noiseYZ[0:len(noiseYZorig)] = noiseYZorig
+    
 
     noiseXY = DltoCl(ell_u,noiseXY)
     noiseWZ = DltoCl(ell_u,noiseWZ)
@@ -29,8 +40,22 @@ def CMB_Phi_Cov(labelXY,labelWZ,labelList,specPP,covPP):
     dspecXY_ldspecPP = get_deriv(specXY_l, specPP, numflag=True)
     dspecWZ_ldspecPP = get_deriv(specWZ_l, specPP, numflag=True)
 
-    # Computing the diagonal term I
+    del12 = np.eye(len(ell_u),len(ell_l))
 
+  
+    for l1 in ell_u:
+        for l2 in ell_l:
+         ind1 = l1-np.min(ell_u)
+         ind2 = l2-np.min(ell_l)
+         term1 = (1/(2*l1+1))*del12[ind1,ind2] *\
+         ((specXY_l[ind1]+noiseXY[ind1])*(specWZ_l[ind2]+noiseWZ[ind2]) +(specXW_l[ind1]+noiseXW[ind1])*(CTTl[ind2]+NTT[ind2]))
+
+         term2 = 0
+
+#         term3 = 0
+#         covtt[ind1,ind2] = (1/fsky)*(term1 + term2 + term3)
+    # Computing the diagonal term I
+    covXYWZ_1 =    
 
     # Computing the off-diagonal term II
 
