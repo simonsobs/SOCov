@@ -1,19 +1,55 @@
-
+import numpy as np
 def CMB_Phi_Cov(labelXY,labelWZ,labelList,specPP,covPP):
-        
+    ''' using equation 5 from https://arxiv.org/pdf/2111.15036.pdf
+    This computes the covariance including off-diagonal terms induced from
+    lensing-CMB correlations.
+    
+    It takes in the labels of the covmat you want (e.g. TT), 
+    the total list of possible labels we are considering, and the phi spectrum
+    and covariance, which are computed/provided elsewhere.'''
+
+    # Current issue: how to check if lensed/unlensed spectra are different lengths
     ell_u,ell_l,specXY_u,specWZ_u,specXY_l,specWZ_l=get_CMB(labelXY,labelWZ,labelList)
     
-    # noiseXY,noiseWZ = get_noise(labelXY,labelWZ)
-    # covXYWZ_u = get_cov_CMBu(labelXY,labelWZ)
+    # Getting the noise spectra
+    noiseXYorig,noiseWZorig = get_noise(labelXY,labelWZ,labelList)
 
+    # making the noise spectra as long as the lensed spectra
+    noiseXY = 0*np.ones(len(ell_u))
+    noiseWZ =0*np.ones(len(ell_u))
+    noiseXY[0:len(noiseXYorig)] = noiseXYorig
+    noiseWZ[0:len(noiseWZorig)] = noiseWZorig
+
+    noiseXY = DltoCl(ell_u,noiseXY)
+    noiseWZ = DltoCl(ell_u,noiseWZ)
+
+    dspecXY_ldspecXY_u = get_deriv(specXY_l, specXY_u, numflag=True)
+    dspecWZ_ldspecWZ_u = get_deriv(specWZ_l, specWZ_u, numflag=True)
+
+    dspecXY_ldspecPP = get_deriv(specXY_l, specPP, numflag=True)
+    dspecWZ_ldspecPP = get_deriv(specWZ_l, specPP, numflag=True)
+
+    # Computing the diagonal term I
+
+
+    # Computing the off-diagonal term II
+
+
+    # computing the off-diagonal term III
     covXYWZ_u = 1
 
     covXYWZ_l = covXYWZ_u
 # need to check that covPP is the same size as needed
     return covXYWZ_l
 
+def get_deriv(specA, specB, numflag=True):
+    #import numpy as np
+
+    if numflag: return np.gradient(specA,specB)
+
+
 def get_CMB(labelXY,labelWZ,labelList):
-    import numpy as np
+    #import numpy as np
 
     ell_l, CTTl, CEEl, CBBl, CTEl = \
         np.loadtxt('testdat/planck_lensing_wp_highL_bestFit_20130627_lensedCls.dat',unpack=True)
@@ -35,7 +71,7 @@ def get_CMB(labelXY,labelWZ,labelList):
     
 
 def get_noise(labelXY,labelWZ,labelList):
-    import numpy as np
+    #import numpy as np
 
     inXY = labelList.index(labelXY)
     inWZ = labelList.index(labelWZ)
@@ -46,20 +82,29 @@ def get_noise(labelXY,labelWZ,labelList):
     NEE = 2*np.pi*NEE/(ell**2)
     # Check if they have overlapping items
     if set(labelXY) == set(labelWZ):
+        # eg. TT and TT
         noiseXY = locals()['N'+labelList[inXY]]
         noiseWZ = locals()['N'+labelList[inWZ]]
-    elif set(labelXY) > set(labelWZ):
-        noiseXY = locals()['N'+labelList[inXY]] # no cross term noise -- only need o
+    elif len(set(labelXY)) > len(set(labelWZ)):
+        # eg TE TT
+        print(labelXY,labelWZ, 'inside set check >')
+        noiseXY = 0*locals()['N'+labelList[inXY]] # no cross term noise 
+        noiseWZ = locals()['N'+labelList[inWZ]] # only need main noise for one leg
+    elif len(set(labelXY)) < len(set(labelWZ)):
+        # eg TT TE
+        print(labelXY,labelWZ, 'inside set check <')
+        noiseXY = locals()['N'+labelList[inXY]] # no cross term noise 
+        noiseWZ = 0*locals()['N'+labelList[inWZ]] # only need main noise for one leg
+    else: 
+        # eg TT EE
+        print(labelXY,labelWZ, 'inside set check else')
+        noiseXY = 0*locals()['N'+labelList[inXY]] # no cross term noise 
         noiseWZ = 0*locals()['N'+labelList[inWZ]] # no cross term noise
-    else:
-        noiseXY = 0*locals()['N'+labelList[inXY]] # no cross term noise -- only need o
-        noiseWZ = locals()['N'+labelList[inWZ]] # no cross term noise
-
 
     return noiseXY,noiseWZ
 
 def get_cov_u(labelXY,labelWZ,labelList,fsky):
-    import numpy as np
+    #import numpy as np
 
     inXY = labelList.index(labelXY)
     inWZ = labelList.index(labelWZ)
@@ -73,7 +118,7 @@ def get_cov_u(labelXY,labelWZ,labelList,fsky):
     specWZ_l = DltoCl(ell_l,specWZ_l)
 
     noiseXYorig,noiseWZorig = get_noise(labelXY,labelWZ,labelList)
-
+    print(noiseXYorig, 'inside get noise')
     # Making sure they are the right shape/length
     noiseXY = 0*np.ones(len(ell_u))
     noiseWZ =0*np.ones(len(ell_u))
@@ -84,9 +129,10 @@ def get_cov_u(labelXY,labelWZ,labelList,fsky):
     noiseXY = DltoCl(ell_u,noiseXY)
     noiseWZ = DltoCl(ell_u,noiseWZ)
 
-    print(noiseXY[0:len(noiseXYorig)])
+    print(f"{noiseXY[0:len(noiseXYorig)]} is the {labelXY} noise")
+    print(f"{noiseWZ[0:len(noiseWZorig)]} is the {labelWZ} noise")
 
-    covXYWZ_u = np.diag((specXY_u + noiseXY)*(specWZ_u+noiseWZ))
+    covXYWZ_u = np.diag((specXY_u + noiseXY)*(specWZ_u + noiseWZ))
 
     covXYWZ_u[:,:]*=norm_fac
 
@@ -94,14 +140,25 @@ def get_cov_u(labelXY,labelWZ,labelList,fsky):
 
 def DltoCl(ell,Dl):
 
-    import numpy as np
+    #import numpy as np
     Cl = Dl*(2*np.pi)/(ell*(ell+1))
 
     return Cl
 
 def CltoDl(ell,Cl):
 
-    import numpy as np
+    #import numpy as np
     Dl = Cl*(ell*(ell+1))/(2*np.pi)
 
     return Dl
+
+def get_phiCov(specPP):
+    
+    # This will be provided in the sacc file, don't need to recalculate here
+    # an issue right now is how to ensure it is the right size etc., so currently sending in specPP
+
+    covPP = np.diag(specPP)
+
+
+
+

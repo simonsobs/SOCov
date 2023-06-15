@@ -22,6 +22,7 @@ specWZ_u = gcm.DltoCl(ell_u,specWZ_u)
 specWZ_l = gcm.DltoCl(ell_l,specWZ_l)
 
 noiseXYorig, noiseWZorig = gcm.get_noise(labelXY,labelWZ,labelList)
+print(noiseXYorig, 'huh ren')
 covXYWZ_u  = gcm.get_cov_u(labelXY,labelWZ,labelList,fsky=0.35)
 
 # # Making sure they are the right shape/length
@@ -40,6 +41,7 @@ ax[0].set_xlim([2,4000])
 ax[0].set_ylim([10,6500])
 topCl = gcm.CltoDl(ell_u,specXY_u+np.sqrt(np.diag(covXYWZ_u)))
 botCl  = gcm.CltoDl(ell_u,specXY_u-np.sqrt(np.diag(covXYWZ_u)))
+
 ax[0].fill_between(ell_u,botCl,topCl)
 ax[0].plot(gcm.CltoDl(ell_u,specXY_u), color='k')
 
