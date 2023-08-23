@@ -21,6 +21,17 @@ specXY_l = gcm.DltoCl(ell_l,specXY_l)
 specWZ_u = gcm.DltoCl(ell_u,specWZ_u)
 specWZ_l = gcm.DltoCl(ell_l,specWZ_l)
 
+
+dspecXY_ldspecXY_u = gcm.get_deriv(specXY_l, specXY_u, numflag=True)
+
+for i in range(40,45):
+    plt.plot(dspecXY_ldspecXY_u[i,2:2500], label='l1=%i'%i)
+    
+plt.legend(loc='best')
+plt.yscale('log')
+plt.savefig('dCLtt_ldCLtt_u.png')
+print(huh)
+
 noiseXYorig, noiseWZorig = gcm.get_noise(labelXY,labelWZ,labelList)
 print(noiseXYorig, 'huh ren')
 covXYWZ_u  = gcm.get_cov_u(labelXY,labelWZ,labelList,fsky=0.35)

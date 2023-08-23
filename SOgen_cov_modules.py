@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt 
 def CMB_Phi_Cov(labelXY,labelWZ,labelXW,labelYZ,labelList,specPP,covPP,fsky):
     ''' using equation 5 from https://arxiv.org/pdf/2111.15036.pdf
     This computes the covariance including off-diagonal terms induced from
@@ -10,52 +11,53 @@ def CMB_Phi_Cov(labelXY,labelWZ,labelXW,labelYZ,labelList,specPP,covPP,fsky):
 
     # Current issue: how to check if lensed/unlensed spectra are different lengths
     ell_u,ell_l,specXY_u,specWZ_u,specXY_l,specWZ_l=get_CMB(labelXY,labelWZ,labelList)
-    ell_u,ell_l,specYW_u,specYZ_u,specXW_l,specYZ_l=get_CMB(labelXW,labelYZ,labelList)
+    ell_u,ell_l,specXW_u,specYZ_u,specXW_l,specYZ_l=get_CMB(labelXW,labelYZ,labelList)
     
     # Getting the noise spectra
     noiseXYorig,noiseWZorig = get_noise(labelXY,labelWZ,labelList)
     noiseXWorig,noiseYZorig = get_noise(labelXW,labelYZ,labelList)
 
+    # ELL1 and ELL2 are lensed you silly sausage
+
     # making the noise spectra as long as the lensed spectra
-    noiseXY = 0*np.ones(len(ell_u))
-    noiseWZ =0*np.ones(len(ell_u))
+    noiseXY = 0*np.ones(len(ell_l))
+    noiseWZ =0*np.ones(len(ell_l))
+    noiseXW = 0*np.ones(len(ell_l))
+    noiseYZ =0*np.ones(len(ell_l))
+    
     noiseXY[0:len(noiseXYorig)] = noiseXYorig
     noiseWZ[0:len(noiseWZorig)] = noiseWZorig
-
-    noiseXY = DltoCl(ell_u,noiseXY)
-    noiseWZ = DltoCl(ell_u,noiseWZ)
-    
-    noiseXW = 0*np.ones(len(ell_u))
-    noiseYZ =0*np.ones(len(ell_u))
     noiseXW[0:len(noiseXWorig)] = noiseXWorig
     noiseYZ[0:len(noiseYZorig)] = noiseYZorig
     
-
-    noiseXY = DltoCl(ell_u,noiseXY)
-    noiseWZ = DltoCl(ell_u,noiseWZ)
+    noiseXY = DltoCl(ell_l,noiseXY)
+    noiseWZ = DltoCl(ell_l,noiseWZ)
+    noiseXW = DltoCl(ell_u,noiseXW)
+    noiseYZ = DltoCl(ell_u,noiseYZ)
 
     dspecXY_ldspecXY_u = get_deriv(specXY_l, specXY_u, numflag=True)
     dspecWZ_ldspecWZ_u = get_deriv(specWZ_l, specWZ_u, numflag=True)
-
     dspecXY_ldspecPP = get_deriv(specXY_l, specPP, numflag=True)
     dspecWZ_ldspecPP = get_deriv(specWZ_l, specPP, numflag=True)
 
-    del12 = np.eye(len(ell_u),len(ell_l))
+    plt.plot(dspecXY_ldspecXY_u[:,0])
+    print(huh)
+    del12 = np.eye(len(ell_l),len(ell_l))
 
   
-    for l1 in ell_u:
+    for l1 in ell_l:
         for l2 in ell_l:
-         ind1 = l1-np.min(ell_u)
+         ind1 = l1-np.min(ell_l)
          ind2 = l2-np.min(ell_l)
          term1 = (1/(2*l1+1))*del12[ind1,ind2] *\
-         ((specXY_l[ind1]+noiseXY[ind1])*(specWZ_l[ind2]+noiseWZ[ind2]) +(specXW_l[ind1]+noiseXW[ind1])*(CTTl[ind2]+NTT[ind2]))
+         ((specXY_l[ind1]+noiseXY[ind1])*(specWZ_l[ind2]+noiseWZ[ind2]) +(specXW_l[ind1]+noiseXW[ind1])*(specYZ_l[ind2]+noiseYZ[ind2]))
 
          term2 = 0
 
 #         term3 = 0
 #         covtt[ind1,ind2] = (1/fsky)*(term1 + term2 + term3)
     # Computing the diagonal term I
-    covXYWZ_1 =    
+    covXYWZ_1 = term1  
 
     # Computing the off-diagonal term II
 
@@ -63,14 +65,23 @@ def CMB_Phi_Cov(labelXY,labelWZ,labelXW,labelYZ,labelList,specPP,covPP,fsky):
     # computing the off-diagonal term III
     covXYWZ_u = 1
 
-    covXYWZ_l = covXYWZ_u
+    covXYWZ_l = covXYWZ_1
 # need to check that covPP is the same size as needed
     return covXYWZ_l
 
 def get_deriv(specA, specB, numflag=True):
+    '''Returns an lpxl matrix of derivatives of 
+    dspecA_lp/dspecB_l'''
     #import numpy as np
 
-    if numflag: return np.gradient(specA,specB)
+    dspecAdl = np.gradient(specA)
+    dspecBdl = np.gradient(specB)
+
+    deriv_mat = np.array([dAl/dspecBdl for dAl in dspecAdl])
+
+    #print(np.shape(deriv_mat),np.shape(specA),np.shape(deriv_mat[1,:]))
+    
+    if numflag: return deriv_mat
 
 
 def get_CMB(labelXY,labelWZ,labelList):
