@@ -5,7 +5,7 @@ import tqdm
 import sys
 
 # Step 1. Create some example spectra
-Nspec = 250
+Nspec = 25
 lmax_lensed = 3000
 lmax_unlensed = 2500
 lmax_pp = 2500
@@ -57,7 +57,8 @@ for i, nspec in enumerate(spectra):
 
 fiducial["pp"] = res.get_lens_potential_cls(CMB_unit = "muK", raw_cl = True)[2:lmax_pp+1,0]
 
-if True:
+gen_spectra=False
+if gen_spectra:
 	spec = np.zeros((lmax_lensed-1, 4, Nspec))
 	spec_pp = np.zeros((lmax_pp-1, Nspec))
 	spec_u = np.zeros((lmax_unlensed-1, 4, Nspec))
