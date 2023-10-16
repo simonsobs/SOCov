@@ -88,9 +88,9 @@ def get_CMB(labelXY,labelWZ,labelList):
     #import numpy as np
 
     ell_l, CTTl, CEEl, CBBl, CTEl = \
-        np.loadtxt('testdat/planck_lensing_wp_highL_bestFit_20130627_lensedCls.dat',unpack=True)
+        np.loadtxt('/home/renee/SOCov/testdat/planck_lensing_wp_highL_bestFit_20130627_lensedCls.dat',unpack=True)
     ell_u,CTTu, CEEu, CBBu, CTEu, Cdd, CdTu, CdEu= \
-        np.loadtxt('testdat/planck_lensing_wp_highL_bestFit_20130627_lenspotentialCls.dat', unpack=True)
+        np.loadtxt('/home/renee/SOCov/testdat/planck_lensing_wp_highL_bestFit_20130627_lenspotentialCls.dat', unpack=True)
 # lens_potential_output_file is specified a file is output containing unlensed scalar (+tensor if calculated) spectra
 #  CX are l(l+1)Cl/2π, and d is the deflection angle, so Cdd=[l(l+1)]2ClΦ/2π, CdT=[l(l+1)]3/2ClΦT/2π, CdE=[l(l+1)]3/2ClΦE/2π. 
 
@@ -112,7 +112,7 @@ def get_noise(labelXY,labelWZ,labelList):
     inXY = labelList.index(labelXY)
     inWZ = labelList.index(labelWZ)
     
-    ell,NTT,NEE = np.loadtxt('testdat/Nell_EC_TPdep0_ACT19_fsky035.txt',unpack=True)
+    ell,NTT,NEE = np.loadtxt('/home/renee/SOCov/testdat/Nell_EC_TPdep0_ACT19_fsky035.txt',unpack=True)
     
     NTT = 2*np.pi*NTT/(ell**2)
     NEE = 2*np.pi*NEE/(ell**2)
